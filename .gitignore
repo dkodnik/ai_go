@@ -1,0 +1,12 @@
+# VS Code
+.vscode/
+
+# Other
+*.sublime-*
+.idea
+.fscache
+.fscache
+*.tmp
+*.keystore
+logs/log.txt
+__pycache__
