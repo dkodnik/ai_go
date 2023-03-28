@@ -10,3 +10,5 @@
 *.keystore
 logs/log.txt
 __pycache__
+.ipynb_checkpoints
+kgs_index.html
