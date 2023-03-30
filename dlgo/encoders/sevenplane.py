@@ -31,11 +31,11 @@ class SevenPlaneEncoder(Encoder):
                     if game_state.does_move_violate_ko(game_state.next_player, Move.play(p)):
                         #кодирование ходов, запрещенных правилом Ко
                         board_tensor[6][row][col] = 1
-                    else:
-                        liberty_plane = min(3, go_string.num_liberties) - 1
-                        liberty_plane += base_plane[go_string.color]
-                        #кодирование черных и белых камней с 1,2 или большим количеством степеней свободы
-                        board_tensor[liberty_plane][row][col] = 1
+                else:
+                    liberty_plane = min(3, go_string.num_liberties) - 1
+                    liberty_plane += base_plane[go_string.color]
+                    #кодирование черных и белых камней с 1,2 или большим количеством степеней свободы
+                    board_tensor[liberty_plane][row][col] = 1
         return board_tensor
 
     def encode_point(self, point):
