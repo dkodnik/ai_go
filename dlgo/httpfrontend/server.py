@@ -5,7 +5,7 @@ from flask import jsonify
 from flask import request
 
 from dlgo import agent
-from dlgo import goboard_fast as goboard
+from dlgo import goboard as goboard
 from dlgo.utils import coords_from_point
 from dlgo.utils import point_from_coords
 
@@ -61,7 +61,7 @@ def get_web_app(bot_map):
             bot_move_str = coords_from_point(bot_move.point)
         return jsonify({
             'bot_move': bot_move_str,
-            'diagnostics': bot_agent.diagnostics()
+            #'diagnostics': bot_agent.diagnostics()
         })
 
     return app
