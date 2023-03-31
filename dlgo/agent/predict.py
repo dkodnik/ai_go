@@ -48,11 +48,11 @@ class DeepLearningAgent(Agent):
 
     def serialize(self, h5file):
         """Сериализация агента."""
-        h5file.creare_group('encoder')
+        h5file.create_group('encoder')
         h5file['encoder'].attrs['name'] = self.encoder.name()
         h5file['encoder'].attrs['board_width'] = self.encoder.board_width
         h5file['encoder'].attrs['board_height'] = self.encoder.board_height
-        h5file.creare_group('model')
+        h5file.create_group('model')
         kerasutil.save_model_to_hdf5_group(self.model, h5file['model'])
 
 def load_prediction_agent(h5file):
