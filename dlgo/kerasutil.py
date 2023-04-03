@@ -11,10 +11,11 @@ def save_model_to_hdf5_group(model, f):
     # Используется Keras save_model для сохранения полной
     # модели (включая состояние оптимизатора) в файл.
     # Затем мы можем встроить содержимое этого файла HDF5 в наш.
-    tempfd, tempfname = tempfile.mkstemp(prefix='tmp-kerasmodel')
+    tempfd, tempfname = tempfile.mkstemp(prefix='tmp-kerasmodel', suffix='.h5')
     try:
         os.close(tempfd)
-        save_model(model, tempfname)
+        #save_model(model, tempfname) #создаёт папку - tempfname !!!
+        model.save(tempfname)
         serialized_model = h5py.File(tempfname, 'r')
         root_item = serialized_model.get('/')
         serialized_model.copy(root_item, f, 'kerasmodel')

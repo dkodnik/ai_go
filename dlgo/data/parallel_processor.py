@@ -50,6 +50,12 @@ class GoDataProcessor:
             features_and_labels = self.consolidate_games(data_type, data)
             return features_and_labels  #...консолидированные данные, как и прежде.
 
+    def load_go_data_npy(self, data_type='train'):
+        """Загрузка из раннее сформированных файлов"""
+        features = np.load('{}/features_{}.npy'.format(self.data_dir, data_type))
+        labels = np.load('{}/labels_{}.npy'.format(self.data_dir, data_type))
+        return features, labels
+
     def unzip_data(self, zip_file_name):
         this_gz = gzip.open(self.data_dir + '/' + zip_file_name)
 
