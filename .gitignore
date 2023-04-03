@@ -15,5 +15,7 @@ kgs_index.html
 
 #Архив для Колаб
 dlgo.zip
+
 #GNU Go (bin Windows)
-gnugo-3.8
+gnugo-3.8/*.dll
+gnugo-3.8/*.exe
