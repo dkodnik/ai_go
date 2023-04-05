@@ -27,7 +27,7 @@ def save_model_to_hdf5_group(model, f):
 def load_model_from_hdf5_group(f, custom_objects=None):
     # Распаковка модели во временный файл. Затем мы можем
     # использовать Keras load_model для его чтения.
-    tempfd, tempfname = tempfile.mkstemp(prefix='tmp-kerasmodel')
+    tempfd, tempfname = tempfile.mkstemp(prefix='tmp-kerasmodel', suffix='.h5')
     try:
         os.close(tempfd)
         serialized_model = h5py.File(tempfname, 'w')
