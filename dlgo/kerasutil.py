@@ -14,8 +14,7 @@ def save_model_to_hdf5_group(model, f):
     tempfd, tempfname = tempfile.mkstemp(prefix='tmp-kerasmodel', suffix='.h5')
     try:
         os.close(tempfd)
-        #save_model(model, tempfname) #создаёт папку - tempfname !!!
-        model.save(tempfname)
+        save_model(model, tempfname)
         serialized_model = h5py.File(tempfname, 'r')
         root_item = serialized_model.get('/')
         serialized_model.copy(root_item, f, 'kerasmodel')
