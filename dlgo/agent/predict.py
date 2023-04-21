@@ -47,7 +47,7 @@ class DeepLearningAgent(Agent):
         return goboard.Move.pass_turn()
 
     def serialize(self, h5file):
-        """Сериализация агента."""
+        """Сериализация(сохранение) агента."""
         h5file.create_group('encoder')
         h5file['encoder'].attrs['name'] = self.encoder.name()
         h5file['encoder'].attrs['board_width'] = self.encoder.board_width
