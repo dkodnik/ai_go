@@ -91,9 +91,17 @@ class PolicyAgent(Agent):
         return goboard.Move.pass_turn()
 
     def train(self, experience, lr=0.0000001, clipnorm=1.0, batch_size=512):
+        """Обучение
+        Params:
+            lr - скорость обучения
+            clipnorm - жестко ограничивает максимальное смещение весов на каждом этапе
+            batch_size - определяет кол.ходов из данных опыта, учитываемых при обновлении отдельного веса
+        """
+        # используется стохастический градиентный спуск
         opt = SGD(lr=lr, clipnorm=clipnorm)
         self._model.compile(loss='categorical_crossentropy', optimizer=opt)
 
+        """
         n = experience.states.shape[0]
         #переведите действия/вознаграждения.
         num_moves = self._encoder.board_width * self._encoder.board_height
@@ -105,6 +113,15 @@ class PolicyAgent(Agent):
 
         self._model.fit(
             experience.states, y,
+            batch_size=batch_size,
+            epochs=1)
+        """
+        target_vectors = prepare_experience_data(
+            experience,
+            self._encoder.board_width,
+            self._encoder.board_height)
+        self._model.fit(
+            experience.states, target_vectors,
             batch_size=batch_size,
             epochs=1)
 
@@ -132,3 +149,13 @@ def load_policy_agent(h5file):
     encoder = encoders.get_encoder_by_name(encoder_name, (board_width, board_height))
     #воссоздание агента
     return PolicyAgent(model, encoder)
+
+def prepare_experience_data(experience, board_width, board_heigt):
+    """Кодирование данных опыта в виде целевого вектора"""
+    experience_size = experience.actions.shape[0]
+    target_vectors = np.zeros((experience_size, board_width * board_heigt))
+    for i in range(experience_size):
+        action = experience.actions[i]
+        reward = experience.rewards[i]
+        target_vectors[i][action] = reward
+    return target_vectors
