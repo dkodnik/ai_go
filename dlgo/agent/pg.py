@@ -26,8 +26,8 @@ class PolicyAgent(Agent):
         #Сохранение достаточного количества информации для
         # воссоздания кодировщика доски.
         h5file['encoder'].attrs['name'] = self._encoder.name()
-        h5file['encoder'].attrs['board_width'] = self._endcoder.board_width
-        h5file['encoder'].attrs['board_height'] = self._endcoder.board_height
+        h5file['encoder'].attrs['board_width'] = self._encoder.board_width
+        h5file['encoder'].attrs['board_height'] = self._encoder.board_height
 
         h5file.create_group('model')
         #использование встроенных функций Keras для сохранения модели и весов
@@ -50,12 +50,12 @@ class PolicyAgent(Agent):
 
         #! move_probs = clip_probs(move_probs) <--- такого нет
         if np.random.random() < self._temperature:
-            # Explore random moves.
+            #исследовать случайные ходы.
             move_probs = np.ones(num_moves) / num_moves
         else:
-            # Follow our current policy.
+            #следовать нашей текущей политике.
             move_probs = self._model.predict(x)[0]
-        # Prevent move probs from getting stuck at 0 or 1.
+        #предотвращение слишком сильного приближения значения вероятности хода к 0 или 1
         eps = 1e-5
         move_probs = np.clip(move_probs, eps, 1 - eps)
         #перенормировка с целью получения нового распределения вероятностей
@@ -94,7 +94,7 @@ class PolicyAgent(Agent):
         self._model.compile(loss='categorical_crossentropy', optimizer=opt)
 
         n = experience.states.shape[0]
-        # Translate the actions/rewards.
+        #переведите действия/вознаграждения.
         num_moves = self._encoder.board_width * self._encoder.board_height
         y = np.zeros((n, num_moves))
         for i in range(n):
