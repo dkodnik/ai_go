@@ -1,8 +1,9 @@
+import time
+
 from dlgo import agent
 from dlgo import goboard
 from dlgo import gotypes
 from dlgo.utils import print_board, print_move
-import time
 
 def main():
     board_size = 9

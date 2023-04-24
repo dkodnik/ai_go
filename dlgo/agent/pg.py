@@ -81,6 +81,7 @@ class PolicyAgent(Agent):
                 point,
                 game_state.next_player)
             if is_valid and (not is_an_eye):
+                #при выборе хода уведомляет ExperienceCollector о принятом решении
                 if self._collector is not None:
                     self._collector.record_decision(
                         state=board_tensor,
@@ -116,6 +117,7 @@ class PolicyAgent(Agent):
         self._temperature = temperature
 
     def set_collector(self, collector):
+        #позволяет драйверу игры бота с самим собой прикрепить к агенту объект ExperienceCollector
         self._collector = collector
 
 def load_policy_agent(h5file):
