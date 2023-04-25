@@ -65,9 +65,9 @@ class QAgent(Agent):
                         state=board_tensor,
                         action=moves[move_idx],
                     )
-                    return goboard.Move.play(point)
-            #этого этапа вы достигните в том случае, если все допустимые ходы будут признаны самоубийственными
-            return goboard.Move.pass_turn()
+                return goboard.Move.play(point)
+        #этого этапа вы достигните в том случае, если все допустимые ходы будут признаны самоубийственными
+        return goboard.Move.pass_turn()
 
     def rank_moves_eps_greedy(self, values):
         """Сортировка ходов в порядке уменьшения ценности."""
