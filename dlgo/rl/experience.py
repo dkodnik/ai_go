@@ -60,6 +60,19 @@ class ExperienceCollector:
             actions=np.array(self.actions),
             rewards=np.array(self.rewards))
 
+def combine_experience(collectors):
+    combined_states = np.concatenate([np.array(c.states) for c in collectors])
+    combined_actions = np.concatenate([np.array(c.actions) for c in collectors])
+    combined_rewards = np.concatenate([np.array(c.rewards) for c in collectors])
+    #combined_advantages = np.concatenate([np.array(c.advantages) for c in collectors])
+
+    return ExperienceBuffer(
+        combined_states,
+        combined_actions,
+        combined_rewards,
+        #combined_advantages,
+    )
+
 def load_experience(h5file):
     """Восстановление ExperienceBuffer из файла HDF5"""
     return ExperienceBuffer(

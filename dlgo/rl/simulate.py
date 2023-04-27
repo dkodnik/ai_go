@@ -35,6 +35,7 @@ def experience_simulation(num_games, agent1, agent2):
     agent2.set_collector(collector2)
 
     for i in range(num_games):
+        print(f'Игра {i+1}/{num_games}')
         collector1.begin_episode()
         collector2.begin_episode()
 
@@ -48,8 +49,8 @@ def experience_simulation(num_games, agent1, agent2):
             collector1.complete_episode(reward=-1)
             collector2.complete_episode(reward=1)
 
-    # сохранение пакета данных опыта, со объединением данных опыта обоих агентов в единый буфер
-    experience = rl.load_experience([
+    # сохранение пакета данных опыта, с объединением данных опыта обоих агентов в единый буфер
+    experience = rl.combine_experience([
         collector1,
         collector2])
     return experience

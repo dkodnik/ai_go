@@ -4,7 +4,7 @@ from dlgo.agent.pg import load_policy_agent
 from dlgo.rl.simulate import experience_simulation
 
 num_games = 1000
-experience_filename = "alphago_rl_experience.h5"
+experience_filename = "sevenplane_rl_experience.h5"
 agent_filename = "./agents/sevenplane.h5"
 
 def main():
