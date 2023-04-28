@@ -75,7 +75,9 @@ class ExperienceCollector:
         return ExperienceBuffer(
             states=np.array(self.states),
             actions=np.array(self.actions),
-            rewards=np.array(self.rewards))
+            rewards=np.array(self.rewards),
+            advantages=np.array(self.advantages),
+        )
 
 def combine_experience(collectors):
     combined_states = np.concatenate([np.array(c.states) for c in collectors])
@@ -96,4 +98,5 @@ def load_experience(h5file):
         states=np.array(h5file['experience']['states']),
         actions=np.array(h5file['experience']['actions']),
         rewards=np.array(h5file['experience']['rewards']),
+        advantages=np.array(h5file['experience']['advantages']),
     )
