@@ -12,7 +12,7 @@ from os import sys
 from keras.utils import to_categorical
 
 from dlgo.gosgf import Sgf_game
-from dlgo.goboard import Board, GameState, Move
+from dlgo.goboard_fast import Board, GameState, Move
 from dlgo.gotypes import Player, Point
 from dlgo.data.index_processor import KGSIndex
 from dlgo.data.sampling import Sampler
@@ -74,16 +74,22 @@ class GoDataProcessor:
 
         shape = self.encoder.shape()
         feature_shape = np.insert(shape, 0, np.asarray([total_examples]))
-        features = np.zeros(feature_shape)
+        features = np.zeros(feature_shape, dtype='float32') #хоть немного меньше памями жрать будет...
         labels = np.zeros((total_examples,))
 
         counter = 0
         for index in game_list:
             name = name_list[index + 1]
             if not name.endswith('.sgf'):
-                raise ValueError(name + ' is not a valid sgf')
+                raise ValueError(name + ' не является валидным sgf')
             sgf_content = zip_file.extractfile(name).read()
             sgf = Sgf_game.from_string(sgf_content)
+
+            #https://github.com/maxpumperla/deep_learning_and_the_game_of_go/issues/52
+            #Если вы используете AlphaGoEncoder, кажется целесообразным пропускать игры с гандикапом.
+            if sgf.get_handicap() is not None and sgf.get_handicap() != 0:
+                print('skipping handicaped game ...')
+                continue
 
             game_state, first_move_done = self.get_handicap(sgf)
 
@@ -107,7 +113,7 @@ class GoDataProcessor:
         feature_file_base = self.data_dir + '/' + data_file_name + '_features_%d'
         label_file_base = self.data_dir + '/' + data_file_name + '_labels_%d'
 
-        chunk = 0  # Due to files with large content, split up after chunksize
+        chunk = 0  # Из-за файлов с большим содержимым разделяются после размера куска "chunksize".
         chunksize = 1024
         while features.shape[0] >= chunksize:
             feature_file = feature_file_base % chunk
@@ -151,7 +157,7 @@ class GoDataProcessor:
         return features, labels
 
     @staticmethod
-    def get_handicap(sgf):  # Get handicap stones
+    def get_handicap(sgf):  # Получите камни для гандикапа
         go_board = Board(19, 19)
         first_move_done = False
         move = None
@@ -160,7 +166,7 @@ class GoDataProcessor:
             for setup in sgf.get_root().get_setup_stones():
                 for move in setup:
                     row, col = move
-                    go_board.place_stone(Player.black, Point(row + 1, col + 1))  # black gets handicap
+                    go_board.place_stone(Player.black, Point(row + 1, col + 1))  # черные получают гандикап
             first_move_done = True
             game_state = GameState(go_board, Player.white, None, move)
         return game_state, first_move_done
@@ -182,12 +188,12 @@ class GoDataProcessor:
                 zips_to_process.append((self.__class__, self.encoder_string, zip_name,
                                         data_file_name, indices_by_zip_name[zip_name]))
 
-        cores = multiprocessing.cpu_count()  # Determine number of CPU cores and split work load among them
+        cores = multiprocessing.cpu_count()  # Определите количество ядер "CPU" и распределите рабочую нагрузку между ними
         pool = multiprocessing.Pool(processes=cores)
         p = pool.map_async(worker, zips_to_process)
         try:
             _ = p.get()
-        except KeyboardInterrupt:  # Caught keyboard interrupt, terminating workers
+        except KeyboardInterrupt:  # Поймано прерывание с клавиатуры, завершающее работу воркеров
             pool.terminate()
             pool.join()
             sys.exit(-1)
@@ -210,5 +216,5 @@ class GoDataProcessor:
                         first_move_done = True
                 total_examples = total_examples + num_moves
             else:
-                raise ValueError(name + ' is not a valid sgf')
+                raise ValueError(name + ' не является валидным sgf')
         return total_examples

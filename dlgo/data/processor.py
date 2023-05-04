@@ -8,7 +8,7 @@ import numpy as np
 from keras.utils import to_categorical
 
 from dlgo.gosgf import Sgf_game
-from dlgo.goboard import Board, GameState, Move
+from dlgo.goboard_fast import Board, GameState, Move
 from dlgo.gotypes import Player, Point
 from dlgo.encoders.base import get_encoder_by_name
 
@@ -89,16 +89,22 @@ class GoDataProcessor:
         #определение формы признаков и меток на основе используемого кодировщика
         shape = self.encoder.shape()
         feature_shape = np.insert(shape, 0, np.asarray([total_examples]))
-        features = np.zeros(feature_shape)
+        features = np.zeros(feature_shape, dtype='float32') #хоть немного меньше памями жрать будет...
         labels = np.zeros((total_examples,))
         counter = 0
         for index in game_list:
             name = name_list[index + 1]
             if not name.endswith('.sgf'):
-                raise ValueError(name + ' is not a valid sgf')
+                raise ValueError(name + ' не является валидным sgf')
             sgf_content = zip_file.extractfile(name).read()
             #чтение содержимого файла SGF в виде строки после распаковки zip-файла
             sgf = Sgf_game.from_string(sgf_content)
+
+            #https://github.com/maxpumperla/deep_learning_and_the_game_of_go/issues/52
+            #Если вы используете AlphaGoEncoder, кажется целесообразным пропускать игры с гандикапом.
+            if sgf.get_handicap() is not None and sgf.get_handicap() != 0:
+                print('skipping handicaped game ...')
+                continue
 
             #определение начального игрового состояния путем применения
             #всех камней "гандикапа"
@@ -164,7 +170,7 @@ class GoDataProcessor:
                         first_move_done = True
                 total_examples = total_examples + num_moves
             else:
-                raise ValueError(name + ' is not a valid sgf')
+                raise ValueError(name + ' не является валидным sgf')
         return total_examples
 
     @staticmethod

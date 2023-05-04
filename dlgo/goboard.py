@@ -2,6 +2,7 @@ import copy
 from dlgo.gotypes import Player, Point
 from dlgo import zobrist
 from dlgo.scoring import compute_game_result
+#from dlgo.utils import MoveAge
 
 class Move():
     '''Ход
@@ -88,6 +89,8 @@ class Board():
         self.num_cols = num_cols
         self._grid = {}
         self._hash = zobrist.EMPTY_BOARD
+
+        #self.move_ages = MoveAge(self)
     
     def place_stone(self, player, point):
         '''Проверка количества степеней свободы соседних точек'''
