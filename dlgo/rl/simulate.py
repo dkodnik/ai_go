@@ -1,4 +1,4 @@
-from dlgo import goboard
+from dlgo import goboard_fast as goboard
 from dlgo import gotypes
 from dlgo import rl
 from dlgo import scoring
