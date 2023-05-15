@@ -128,6 +128,7 @@ class ValueAgent(Agent):
         h5file['encoder'].attrs['board_width'] = self.encoder.board_width
         h5file['encoder'].attrs['board_height'] = self.encoder.board_height
         h5file.create_group('model')
+        # использование встроенных функций Keras для сохранения модели и весов
         kerasutil.save_model_to_hdf5_group(self.model, h5file['model'])
 
     def diagnostics(self):
