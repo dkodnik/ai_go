@@ -52,24 +52,35 @@ class IllegalMoveError(Exception):
 
 
 class GoString():
-    """Stones that are linked by a chain of connected stones of the
-    same color.
-    """
+    '''Цепочка связанных камней одного цвета
+    '''
+
     def __init__(self, color, stones, liberties):
         self.color = color
+        # Множества камней и степеней свободы - являются неизменяемыми
         self.stones = frozenset(stones)
         self.liberties = frozenset(liberties)
 
+    # def remove_liberty(self, point):
+    #    '''Удалить степень свободы цепочки'''
+    #    self.liberties.remove(point)
+
     def without_liberty(self, point):
+        '''Удалить степень свободы цепочки. Замена remove_liberty'''
         new_liberties = self.liberties - set([point])
         return GoString(self.color, self.stones, new_liberties)
 
+    # def add_liberty(self, point):
+    #    '''Добавить степень свободы к цепочке'''
+    #    self.liberties.add(point)
+
     def with_liberty(self, point):
+        '''Добавить степень свободы к цепочке. Замена add_liberty'''
         new_liberties = self.liberties | set([point])
         return GoString(self.color, self.stones, new_liberties)
 
     def merged_with(self, string):
-        """Return a new string containing all stones in both strings."""
+        '''Возвращает новую цепочку, содержащую все камни обеих цепочек'''
         assert string.color == self.color
         combined_stones = self.stones | string.stones
         return GoString(
@@ -92,7 +103,10 @@ class GoString():
 
 
 class Board():
+    '''Доска'''
+
     def __init__(self, num_rows, num_cols):
+        '''Инициализация в виде пустой сетки, состоящая из заданного количества строк и столбцов'''
         self.num_rows = num_rows
         self.num_cols = num_cols
         self._grid = {}
@@ -116,6 +130,7 @@ class Board():
         return self.corner_table[point]
 
     def place_stone(self, player, point):
+        '''Проверка количества степеней свободы соседних точек'''
         assert self.is_on_grid(point)
         if self._grid.get(point) is not None:
             print('Illegal play on %s' % str(point))
@@ -127,6 +142,7 @@ class Board():
         self.move_ages.increment_all()
         self.move_ages.add(point)
         for neighbor in self.neighbor_table[point]:
+            # сначала исследуются непосредственные соседи конкретной точки
             neighbor_string = self._grid.get(neighbor)
             if neighbor_string is None:
                 liberties.append(neighbor)
@@ -137,8 +153,8 @@ class Board():
                 if neighbor_string not in adjacent_opposite_color:
                     adjacent_opposite_color.append(neighbor_string)
         new_string = GoString(player, [point], liberties)
-# tag::apply_zobrist[]
-        # 1. Merge any adjacent strings of the same color.
+
+        # 1. Объединение любых смежных цепочек камней одного цвета
         for same_color_string in adjacent_same_color:
             new_string = new_string.merged_with(same_color_string)
         for new_string_point in new_string.stones:
@@ -146,28 +162,32 @@ class Board():
         # Remove empty-point hash code.
         self._hash ^= zobrist.HASH_CODE[point, None]
         # Add filled point hash code.
-        self._hash ^= zobrist.HASH_CODE[point, player]
-# end::apply_zobrist[]
+        # Применение хэш-кода для данной точки и игрока
+        self._hash ^= zobrist.HASH_CODE[point, player]  # ^ - XOR
 
         # 2. Reduce liberties of any adjacent strings of the opposite
         #    color.
         # 3. If any opposite color strings now have zero liberties,
         #    remove them.
         for other_color_string in adjacent_opposite_color:
+            # Уменьшение количества степеней свободы соседних цепочек камней противоположного цвета
             replacement = other_color_string.without_liberty(point)
             if replacement.num_liberties:
                 self._replace_string(other_color_string.without_liberty(point))
             else:
+                # Удаление с доски цепочек камней противоположного цвета с нулевой степенью свободы
                 self._remove_string(other_color_string)
 
     def _replace_string(self, new_string):
+        """Обновление сетки доски"""
         for point in new_string.stones:
             self._grid[point] = new_string
 
     def _remove_string(self, string):
+        """Удаление камней"""
         for point in string.stones:
             self.move_ages.reset_age(point)
-            # Removing a string can create liberties for other strings.
+            #Удаление цепочки может привести к увеличению степеней свободы других цепочек
             for neighbor in self.neighbor_table[point]:
                 neighbor_string = self._grid.get(neighbor)
                 if neighbor_string is None:
@@ -175,7 +195,7 @@ class Board():
                 if neighbor_string is not string:
                     self._replace_string(neighbor_string.with_liberty(point))
             self._grid[point] = None
-            # Remove filled point hash code.
+            #Отменяем применение хеш-значения для этого хода
             self._hash ^= zobrist.HASH_CODE[point, string.color]
             # Add empty point hash code.
             self._hash ^= zobrist.HASH_CODE[point, None]
@@ -212,26 +232,19 @@ class Board():
         return False
 
     def is_on_grid(self, point):
+        '''Проверка на размещение на доске'''
         return 1 <= point.row <= self.num_rows and \
             1 <= point.col <= self.num_cols
 
     def get(self, point):
-        """Return the content of a point on the board.
-
-        Returns None if the point is empty, or a Player if there is a
-        stone on that point.
-        """
+        '''Возвращает содержимое точки на доске: сведения об игроке, если в этой точке находится камень, в противном случае - None'''
         string = self._grid.get(point)
         if string is None:
             return None
         return string.color
 
     def get_go_string(self, point):
-        """Return the entire string of stones at a point.
-
-        Returns None if the point is empty, or a GoString if there is
-        a stone on that point.
-        """
+        '''Возвращает всю цепочку камней, если в этой точке находится камень, в противном случае - None'''
         string = self._grid.get(point)
         if string is None:
             return None
@@ -251,16 +264,15 @@ class Board():
         copied._hash = self._hash
         return copied
 
-# tag::return_zobrist[]
     def zobrist_hash(self):
+        # Возвращает текущее значение Zobrist-хеша доски
         return self._hash
-# end::return_zobrist[]
 
 
 class Move():
-    """Any action a player can play on a turn.
+    """Любое действие, которое игрок может выполнить в свой ход.
 
-    Exactly one of is_play, is_pass, is_resign will be set.
+    Будет установлено ровно одно из значений is_play, is_pass, is_resign.
     """
     def __init__(self, point=None, is_pass=False, is_resign=False):
         assert (point is not None) ^ is_pass ^ is_resign
@@ -271,15 +283,17 @@ class Move():
 
     @classmethod
     def play(cls, point):
-        """A move that places a stone on the board."""
+        """Ход, который помещает камень на доску."""
         return Move(point=point)
 
     @classmethod
     def pass_turn(cls):
+        '''Ход предполагает пропуск хода'''
         return Move(is_pass=True)
 
     @classmethod
     def resign(cls):
+        '''Ход предполагает выход из игры'''
         return Move(is_resign=True)
 
     def __str__(self):
@@ -309,6 +323,8 @@ class Move():
 
 
 class GameState():
+    """Игровое состояние"""
+
     def __init__(self, board, next_player, previous, move):
         self.board = board
         self.next_player = next_player
@@ -322,7 +338,7 @@ class GameState():
         self.last_move = move
 
     def apply_move(self, move):
-        """Return the new GameState after applying the move."""
+        '''Возвращает новое игровое состояние после совершения хода'''
         if move.is_play:
             next_board = copy.deepcopy(self.board)
             next_board.place_stone(self.next_player, move.point)
@@ -338,6 +354,7 @@ class GameState():
         return GameState(board, Player.black, None, None)
 
     def is_move_self_capture(self, player, move):
+        '''Проверка самозахвата'''
         if not move.is_play:
             return False
         return self.board.is_self_capture(player, move.point)
@@ -347,6 +364,7 @@ class GameState():
         return (self.next_player, self.board)
 
     def does_move_violate_ko(self, player, move):
+        '''Проверка на нарушение состояния Ко'''
         if not move.is_play:
             return False
         if not self.board.will_capture(player, move.point):
@@ -357,6 +375,7 @@ class GameState():
         return next_situation in self.previous_states
 
     def is_valid_move(self, move):
+        '''Проверка на допустимость хода для данного игрового состояния'''
         if self.is_over():
             return False
         if move.is_pass or move.is_resign:
@@ -367,6 +386,7 @@ class GameState():
             not self.does_move_violate_ko(self.next_player, move))
 
     def is_over(self):
+        '''Проверка окончания игры'''
         if self.last_move is None:
             return False
         if self.last_move.is_resign:
@@ -377,20 +397,23 @@ class GameState():
         return self.last_move.is_pass and second_last_move.is_pass
 
     def legal_moves(self):
+        """Допустимые ходы"""
         #if self.is_over():
         #    return []
         # закомечент, потом что: Сделать пас всегда законный ход. В настоящее время goboard_fast не разрешает передачу,
         # если игра уже закончена. Это изменение делает goboard_fast совместимым с goboard_slow и goboard.
+        #исправление ошибки https://github.com/maxpumperla/deep_learning_and_the_game_of_go/issues/61
         moves = []
         for row in range(1, self.board.num_rows + 1):
             for col in range(1, self.board.num_cols + 1):
                 move = Move.play(Point(row, col))
                 if self.is_valid_move(move):
                     moves.append(move)
-        # These two moves are always legal.
+        # Эти два шага всегда - допустимы.
         moves.append(Move.pass_turn())
         moves.append(Move.resign())
 
+        print("::moves >>", len(moves))
         return moves
 
     def winner(self):
