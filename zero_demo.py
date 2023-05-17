@@ -2,7 +2,7 @@ from dlgo.goboard_fast import GameState, Player
 from dlgo import scoring
 
 #from dlgo.goboard_fast import Point
-#from keras.layers import Activation, BatchNormalization
+from keras.layers import Activation, BatchNormalization
 from keras.layers import Conv2D, Dense, Flatten, Input
 from keras.models import Model
 from dlgo import zero
@@ -42,23 +42,37 @@ pb = board_input
 #создайте сеть с 4-мя сверточными слоями. Для создания сильного бота можно
 #добавить множество дополнительных слоев
 for i in range(4):
-    pb = Conv2D(64, (3,3),
+    pb = Conv2D(64, (3, 3),
                 padding='same',
                 data_format='channels_first',
-                activation='relu')(pb)
+                # activation='relu',
+                )(pb)
+    #Ось должна соответствовать способу упорядочивания data_format. Для channels_first
+    #используется axis=1 (первая ось). Для channel_last используется axis=-/1 (последняя ось)
+    pb = BatchNormalization(axis=1)(pb) # Пакетная нормализация (гл.14.5.1)
+    #Нормализация происходит между сверткой и функцией активации relu
+    pb = Activation('relu')(pb)
 
 #добавьте в сеть выход функции политики
 policy_conv = Conv2D(2, (1,1),
                      data_format='channels_first',
-                     activation='relu')(pb)
-policy_flat = Flatten()(policy_conv)
+                     #activation='relu',
+                     )(pb)
+#policy_flat = Flatten()(policy_conv)
+policy_batch = BatchNormalization(axis=1)(policy_conv) # Пакетная нормализация (гл.14.5.1)
+policy_relu = Activation('relu')(policy_batch)
+policy_flat = Flatten()(policy_relu)
 policy_output = Dense(encoder.num_moves(), activation='softmax')(policy_flat)
 
 #добавьте в сеть выход функции ценности
 value_conv = Conv2D(1, (1,1),
                     data_format='channels_first',
-                    activation='relu')(pb)
-value_flat = Flatten()(value_conv)
+                    #activation='relu',
+                    )(pb)
+#value_flat = Flatten()(value_conv)
+value_batch = BatchNormalization(axis=1)(value_conv) # Пакетная нормализация (гл.14.5.1)
+value_relu = Activation('relu')(value_batch)
+value_flat = Flatten()(value_relu)
 value_hidden = Dense(256, activation='relu')(value_flat)
 value_output = Dense(1, activation='tanh')(value_hidden)
 

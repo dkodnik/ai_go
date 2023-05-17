@@ -402,7 +402,7 @@ class GameState():
         #    return []
         # закомечент, потом что: Сделать пас всегда законный ход. В настоящее время goboard_fast не разрешает передачу,
         # если игра уже закончена. Это изменение делает goboard_fast совместимым с goboard_slow и goboard.
-        #исправление ошибки https://github.com/maxpumperla/deep_learning_and_the_game_of_go/issues/61
+        #исправление ошибки https://github.com/maxpumperla/deep_learning_and_the_game_of_go/issues/61 (вот только этот код не вызывается!)
         moves = []
         for row in range(1, self.board.num_rows + 1):
             for col in range(1, self.board.num_cols + 1):
@@ -413,7 +413,6 @@ class GameState():
         moves.append(Move.pass_turn())
         moves.append(Move.resign())
 
-        print("::moves >>", len(moves))
         return moves
 
     def winner(self):

@@ -2,9 +2,9 @@ import numpy as np
 
 __all__ = [
     'ZeroExperienceCollector',
-    #'ZeroExperienceBuffer',
-    #'combine_experience',
-    #'load_experience',
+    'ZeroExperienceBuffer',
+    'combine_experience',
+    'load_experience',
 ]
 
 class ZeroExperienceCollector:
@@ -35,7 +35,6 @@ class ZeroExperienceCollector:
         self._current_episode_visit_counts = []
 
 
-## Для чего ZeroExperienceBuffer ???
 class ZeroExperienceBuffer:
     def __init__(self, states, visit_counts, rewards):
         self.states = states

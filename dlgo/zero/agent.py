@@ -91,9 +91,6 @@ class ZeroAgent(Agent):
             return q + self.c * p * np.sqrt(total_n) / (n+1)
         #node.moves() - это список ходов. При передаче key=score_branch
         #функция max возвращает ход с наибольшим значением функции score_branch
-        print("max=> nodeMoves=", len(node.moves()), " score_branch=",score_branch)
-        #nodeMoves = 0 ---> ValueError: max() arg is an empty sequence
-        #https://github.com/maxpumperla/deep_learning_and_the_game_of_go/issues/61
         return max(node.moves(), key=score_branch)
 
     def select_move(self, game_state):
@@ -116,7 +113,7 @@ class ZeroAgent(Agent):
                 next_move = self.select_branch(node)
 
             new_state = node.state.apply_move(next_move)
-            child_node = self.create_node(new_state, move=next_move, parent=node)
+            child_node = self.create_node(new_state, parent=node) #child_node = self.create_node(new_state, move=next_move, parent=node)
 
             move = next_move
             #на каждом уровне дерева мы переключаем перспективу между двумя
@@ -151,6 +148,11 @@ class ZeroAgent(Agent):
         #функция predict возращает массивы со множеством результатов, из которых
         #мы извлекаем первый элемент.
         priors = priors[0]
+        # Добавить шум Дирихле к корневому узлу (root node) {гл.14.4}.
+        if parent is None:
+            noise = np.random.dirichlet(
+                0.03 * np.ones_like(priors))
+            priors = 0.75 * priors + 0.25 * noise
         value = values[0][0]
         #распаковка вектора априорных вероятностей в словарь, отображающий
         #объекты move в соответствующие априорные вероятности
@@ -167,6 +169,7 @@ class ZeroAgent(Agent):
 
     def train(self, experience, learning_rate, batch_size):
         """Обучение комбинированной сети.
+
         Params:
             learning_rate (lr) - скорость обучения
             batch_size - определяет кол.ходов из данных опыта, учитываемых при обновлении отдельного веса
